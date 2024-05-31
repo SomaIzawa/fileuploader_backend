@@ -38,7 +38,11 @@ func (uu *userUsecase) SignUp(userReq schema.UserSignUpReq) (model.User, error) 
 	if err != nil {
 		return model.User{}, err
 	}
-	newUser := model.User{Email: userReq.Email, HashedPassword: string(hash)}
+	newUser := model.User{
+		Name: userReq.Name, 
+		Email: userReq.Email, 
+		HashedPassword: string(hash),
+	}
 	if err := uu.ur.CreateUser(&newUser); err != nil {
 		return model.User{}, err
 	}

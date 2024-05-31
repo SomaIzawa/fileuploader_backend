@@ -21,6 +21,11 @@ func NewUserValidator() IUserValidator {
 func (uv *userValidator) UserSignUpValidate(userReq schema.UserSignUpReq) error {
 	return validation.ValidateStruct(&userReq,
 		validation.Field(
+			&userReq.Name,
+			validation.Required.Error("name is required"),
+			validation.RuneLength(1, 30).Error("limited max 30 char"),
+		),
+		validation.Field(
 			&userReq.Email,
 			validation.Required.Error("email is required"),
 			validation.RuneLength(1, 30).Error("limited max 30 char"),
