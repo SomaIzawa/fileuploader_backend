@@ -1,6 +1,7 @@
 package router
 
 import (
+	"file-uploader-api/awsmanager"
 	"file-uploader-api/controller"
 	"file-uploader-api/db"
 	"file-uploader-api/repository"
@@ -17,6 +18,7 @@ import (
 
 func NewRouter() *echo.Echo {
 	db := db.NewDB()
+	am := awsmanager.NewAwsS3Manager()
 
 	uv := validator.NewUserValidator()
 	ur := repository.NewUserRepository(db)
@@ -31,11 +33,11 @@ func NewRouter() *echo.Echo {
 	pv := validator.NewPostValidator()
 	fv := validator.NewFileValidator()
 	pr := repository.NewPostRepository(db)
-	pu := usecase.NewPostUsecase(pr, ur, cr, pv, fv, db);
+	pu := usecase.NewPostUsecase(pr, ur, cr, pv, fv, am, db);
 	pc := controller.NewPostController(pu)
 
 	fr := repository.NewFileRepository(db)
-	fu := usecase.NewFileUsecase(fr, db)
+	fu := usecase.NewFileUsecase(fr, am, db)
 	fc := controller.NewFileController(fu)
 
 	e := echo.New()

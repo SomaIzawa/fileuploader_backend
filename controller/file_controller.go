@@ -1,16 +1,12 @@
 package controller
 
 import (
-	"crypto/x509"
-	"encoding/pem"
+	"file-uploader-api/awsmanager"
 	"file-uploader-api/schema"
 	"file-uploader-api/usecase"
 	"fmt"
 	"net/http"
-	"os"
-	"time"
 
-	"github.com/aws/aws-sdk-go/service/cloudfront/sign"
 	"github.com/labstack/echo/v4"
 )
 
@@ -35,7 +31,7 @@ func (fc *fileController) GetSignedURL(c echo.Context) error {
 	if err := c.Bind(&getSignedURLReq); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
-	signedURL, err := GenerateSignedURL(getSignedURLReq.Url)
+	signedURL, err := awsmanager.GenerateSignedURL(getSignedURLReq.Url)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
@@ -62,24 +58,4 @@ func (fc *fileController) DeleteFile(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusNoContent, nil)
-}
-
-func GenerateSignedURL(resourcePath string) (string, error) {
-	// CloudFrontの設定
-	keyPairID := os.Getenv("AWS_CLOUDFRONT_KEY_PAIR")
-
-	// 秘密鍵の読み込み
-	privateKeyBytes, err := os.ReadFile("private_key.pem")
-	if err != nil {
-		return "", err
-	}
-	block, _ := pem.Decode([]byte(privateKeyBytes))
-	key, _ := x509.ParsePKCS1PrivateKey(block.Bytes)
-
-	signer := sign.NewURLSigner(keyPairID, key)
-	signedURL, err := signer.Sign(resourcePath, time.Now().Add(3*time.Second))
-	if err != nil {
-		return "", err
-	}
-	return signedURL, nil
 }
