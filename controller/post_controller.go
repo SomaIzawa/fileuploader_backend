@@ -74,7 +74,7 @@ func (pc *postController) Create(c echo.Context) error {
 	}
 
 	createPostReq.Files = createFileReqs
-	
+
 	// ログインユーザの取得
 	userId, err := GetUserId(c)
 	if err != nil {

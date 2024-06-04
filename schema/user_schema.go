@@ -6,28 +6,28 @@ import (
 )
 
 type UserSignUpReq struct {
-	Name string `json:"name"`
-	Email string `json:"email"`
-	Password string `json:"password"`
+	Name            string `json:"name"`
+	Email           string `json:"email"`
+	Password        string `json:"password"`
 	PasswordConfirm string `json:"password_confirm"`
 }
 
 type UserLoginReq struct {
-	Email string `json:"email"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 type UserRes struct {
-	ID uint `json:"id"`
-	Name string `json:"name"`
-	Email string `json:"email"`
-	HashedPassword string `json:"hashed_password"`
-	AllowedAt time.Time `json:"allowed_at"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID             uint      `json:"id"`
+	Name           string    `json:"name"`
+	Email          string    `json:"email"`
+	HashedPassword string    `json:"hashed_password"`
+	AllowedAt      time.Time `json:"allowed_at"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
-func UserModelToUserRes (user model.User) UserRes {
+func UserModelToUserRes(user model.User) UserRes {
 	return UserRes{
 		user.ID,
 		user.Name,
@@ -38,4 +38,3 @@ func UserModelToUserRes (user model.User) UserRes {
 		user.UpdatedAt,
 	}
 }
-

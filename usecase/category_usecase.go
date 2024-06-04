@@ -10,8 +10,8 @@ import (
 
 type ICategoryUsecase interface {
 	List() ([]model.Category, error)
-	Get(id string)(model.Category, error)
-	Create(req schema.CreateCategoryReq)(model.Category, error)
+	Get(id string) (model.Category, error)
+	Create(req schema.CreateCategoryReq) (model.Category, error)
 }
 
 type categoryUsecase struct {
@@ -33,7 +33,7 @@ func (cu *categoryUsecase) List() ([]model.Category, error) {
 
 func (cu *categoryUsecase) Get(id string) (model.Category, error) {
 	category := model.Category{}
-	uintId, err := util.AtoUint(id);
+	uintId, err := util.AtoUint(id)
 	if err != nil {
 		return model.Category{}, err
 	}
@@ -48,8 +48,8 @@ func (cu *categoryUsecase) Create(req schema.CreateCategoryReq) (model.Category,
 		return model.Category{}, err
 	}
 	newCategory := model.Category{Name: req.Name}
-	id, err := cu.cr.CreateCategory(&newCategory);
-	if  err != nil {
+	id, err := cu.cr.CreateCategory(&newCategory)
+	if err != nil {
 		return model.Category{}, err
 	}
 	category := model.Category{}
@@ -58,4 +58,3 @@ func (cu *categoryUsecase) Create(req schema.CreateCategoryReq) (model.Category,
 	}
 	return category, nil
 }
-

@@ -23,7 +23,7 @@ func NewUserRepository(db *gorm.DB) IUserRepository {
 }
 
 func (ur *userRepository) GetUser(user *model.User, id uint) error {
-	if err := ur.db.Where("id=?",id).First(&user).Error; err != nil {
+	if err := ur.db.Where("id=?", id).First(&user).Error; err != nil {
 		return err
 	}
 	return nil
@@ -49,4 +49,3 @@ func (ur *userRepository) UpdateAllowAt(id string) error {
 	}
 	return nil
 }
-

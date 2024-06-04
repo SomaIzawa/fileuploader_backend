@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func main(){
+func main() {
 	dbConn := db.NewDB()
 	if err := user(dbConn); err != nil {
 		log.Fatalf("failed to seed: %s", err)
@@ -25,10 +25,10 @@ func user(db *gorm.DB) error {
 		return err
 	}
 	user := model.User{
-		ID: 1,
-		Name: "管理ユーザー",
-		Email: "admin@example.com",
-		AllowedAt: time.Now(),
+		ID:             1,
+		Name:           "管理ユーザー",
+		Email:          "admin@example.com",
+		AllowedAt:      time.Now(),
 		HashedPassword: string(hash),
 	}
 

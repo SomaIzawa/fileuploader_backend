@@ -1,14 +1,13 @@
 package usecase
 
 import (
-	"file-uploader-api/aws"
+	"file-uploader-api/awsmanager"
 	"file-uploader-api/model"
 	"file-uploader-api/repository"
 	"file-uploader-api/schema"
 	"file-uploader-api/util"
 	"file-uploader-api/validator"
 	"fmt"
-	"os"
 
 	"gorm.io/gorm"
 )
@@ -16,7 +15,7 @@ import (
 type IPostUsecase interface {
 	List() ([]model.Post, error)
 	Get(id string) (model.Post, error)
-	Create(req schema.CreatePostReq, userId uint)(model.Post, error)
+	Create(req schema.CreatePostReq, userId uint) (model.Post, error)
 }
 
 type postUsecase struct {
@@ -25,15 +24,17 @@ type postUsecase struct {
 	cr repository.ICategoryRepository
 	pv validator.IPostValidator
 	fv validator.IFileValidator
+	am awsmanager.IAwsS3Manager
 	db *gorm.DB
 }
 
 func NewPostUsecase(
-	pr repository.IPostRepository, 
+	pr repository.IPostRepository,
 	ur repository.IUserRepository,
 	cr repository.ICategoryRepository,
-	pv validator.IPostValidator, 
-	fv validator.IFileValidator, 
+	pv validator.IPostValidator,
+	fv validator.IFileValidator,
+	am awsmanager.IAwsS3Manager,
 	db *gorm.DB) IPostUsecase {
 	return &postUsecase{
 		pr: pr,
@@ -41,6 +42,7 @@ func NewPostUsecase(
 		cr: cr,
 		pv: pv,
 		fv: fv,
+		am: am,
 		db: db,
 	}
 }
@@ -55,7 +57,7 @@ func (pu *postUsecase) List() ([]model.Post, error) {
 
 func (pu *postUsecase) Get(id string) (model.Post, error) {
 	post := model.Post{}
-	uintId, err := util.AtoUint(id);
+	uintId, err := util.AtoUint(id)
 	if err != nil {
 		return model.Post{}, err
 	}
@@ -66,11 +68,6 @@ func (pu *postUsecase) Get(id string) (model.Post, error) {
 }
 
 func (pu *postUsecase) Create(req schema.CreatePostReq, userId uint) (model.Post, error) {
-	// awsの準備
-	s := aws.NewS3Session()
-	uploader := aws.CreateUploader(s)
-	awsBucketName := os.Getenv("AWS_BUCKET_NAME")
-
 	//バリデーション
 
 	// バリデーターを用いたバリデーション
@@ -80,7 +77,7 @@ func (pu *postUsecase) Create(req schema.CreatePostReq, userId uint) (model.Post
 	for _, fileReq := range req.Files {
 		if err := pu.fv.FileCreateValidate(fileReq); err != nil {
 			return model.Post{}, err
-		}	
+		}
 	}
 	//カテゴリーIDの有効性
 	categoryId, err := util.AtoUint(req.CategoryID)
@@ -105,19 +102,19 @@ func (pu *postUsecase) Create(req schema.CreatePostReq, userId uint) (model.Post
 		return model.Post{}, err
 	}
 	newPost := model.Post{
-		Title: req.Title,
-		Comment: req.Comment,
+		Title:         req.Title,
+		Comment:       req.Comment,
 		ThumbnailType: thumbnailFileType,
-		UserId: userId,
-		CategoryId: uintCategoryID,
+		UserId:        userId,
+		CategoryId:    uintCategoryID,
 		Files: func() []model.File {
 			files := make([]model.File, len(req.Files))
 			for i, file := range req.Files {
 				fileType, _ := util.MimeTypeToType(file.File)
 				files[i] = model.File{
 					FileName: file.Name,
-					Type: fileType,
-					UserId: userId,
+					Type:     fileType,
+					UserId:   userId,
 				}
 			}
 			return files
@@ -132,21 +129,21 @@ func (pu *postUsecase) Create(req schema.CreatePostReq, userId uint) (model.Post
 	}
 
 	// アップロード
-	if err := aws.S3Upload(uploader, awsBucketName, fmt.Sprintf("t%d.%s", newPost.ID, newPost.ThumbnailType), *req.Thumnail); err != nil {
+	if err := pu.am.UploadFile(fmt.Sprintf("t%d.%s", newPost.ID, newPost.ThumbnailType), *req.Thumnail); err != nil {
 		tx.Rollback()
-		return model.Post{}, err	
-	} 
+		return model.Post{}, err
+	}
 	for i, file := range req.Files {
-		if err := aws.S3Upload(uploader, awsBucketName, fmt.Sprintf("%d.%s", newPost.Files[i].ID, newPost.Files[i].Type), *file.File); err != nil {
+		if err := pu.am.UploadFile(fmt.Sprintf("%d.%s", newPost.Files[i].ID, newPost.Files[i].Type), *file.File); err != nil {
 			tx.Rollback()
-			return model.Post{}, err	
-		} 
+			return model.Post{}, err
+		}
 	}
 
 	// トランザクションをコミット
 	if err := tx.Commit().Error; err != nil {
 		return model.Post{}, err
 	}
-	
+
 	return newPost, nil
 }

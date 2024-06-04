@@ -1,6 +1,7 @@
 package router
 
 import (
+	"file-uploader-api/awsmanager"
 	"file-uploader-api/controller"
 	"file-uploader-api/db"
 	"file-uploader-api/repository"
@@ -17,6 +18,7 @@ import (
 
 func NewRouter() *echo.Echo {
 	db := db.NewDB()
+	am := awsmanager.NewAwsS3Manager()
 
 	uv := validator.NewUserValidator()
 	ur := repository.NewUserRepository(db)
@@ -31,24 +33,24 @@ func NewRouter() *echo.Echo {
 	pv := validator.NewPostValidator()
 	fv := validator.NewFileValidator()
 	pr := repository.NewPostRepository(db)
-	pu := usecase.NewPostUsecase(pr, ur, cr, pv, fv, db);
+	pu := usecase.NewPostUsecase(pr, ur, cr, pv, fv, am, db)
 	pc := controller.NewPostController(pu)
 
 	fr := repository.NewFileRepository(db)
-	fu := usecase.NewFileUsecase(fr, db)
+	fu := usecase.NewFileUsecase(fr, am, db)
 	fc := controller.NewFileController(fu)
 
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:3000"},
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, 
-			echo.HeaderAccessControlAllowHeaders, echo.HeaderXCSRFToken },
-		AllowMethods: []string{"GET", "PUT", "POST", "DELETE"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept,
+			echo.HeaderAccessControlAllowHeaders, echo.HeaderXCSRFToken},
+		AllowMethods:     []string{"GET", "PUT", "POST", "DELETE"},
 		AllowCredentials: true,
 	}))
 	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
-		CookiePath: "/",
-		CookieDomain: os.Getenv("API_DOMAIN"),
+		CookiePath:     "/",
+		CookieDomain:   os.Getenv("API_DOMAIN"),
 		CookieHTTPOnly: true,
 		CookieSameSite: http.SameSiteNoneMode,
 	}))
@@ -75,7 +77,7 @@ func NewRouter() *echo.Echo {
 	p.GET("", pc.List)
 	p.GET("/:postId", pc.GetById)
 
-	f:= e.Group("/files")
+	f := e.Group("/files")
 	f.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey:  []byte(os.Getenv("SECRET")),
 		TokenLookup: "cookie:token",
