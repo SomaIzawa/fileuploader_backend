@@ -23,7 +23,7 @@ type fileUsecase struct {
 
 func NewFileUsecase(fr repository.IFileRepository, am awsmanager.IAwsS3Manager, db *gorm.DB) IFileUsecase {
 	return &fileUsecase{
-		fr: fr, 
+		fr: fr,
 		am: am,
 		db: db,
 	}
@@ -40,7 +40,7 @@ func (fu *fileUsecase) Download(id string) (model.File, string, error) {
 	}
 
 	key := fmt.Sprintf("%d.%s", file.ID, file.Type)
-	
+
 	presignedURL, err := fu.am.GetDownloadLink(key)
 	if err != nil {
 		return model.File{}, "", err

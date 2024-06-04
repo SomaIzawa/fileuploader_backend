@@ -19,7 +19,7 @@ func GetFileMimeType(fileHeader *multipart.FileHeader) (string, error) {
 	// ファイルを開く
 	file, err := fileHeader.Open()
 	if err != nil {
-			return "", err
+		return "", err
 	}
 	defer file.Close()
 
@@ -27,7 +27,7 @@ func GetFileMimeType(fileHeader *multipart.FileHeader) (string, error) {
 	buffer := make([]byte, 512)
 	_, err = file.Read(buffer)
 	if err != nil {
-			return "", err
+		return "", err
 	}
 
 	// MIME タイプを判別
@@ -38,7 +38,7 @@ func GetFileMimeType(fileHeader *multipart.FileHeader) (string, error) {
 func MimeTypeToType(fileHeader *multipart.FileHeader) (string, error) {
 	mimeType, err := GetFileMimeType(fileHeader)
 
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 	switch mimeType {

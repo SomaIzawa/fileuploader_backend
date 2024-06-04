@@ -17,7 +17,6 @@ func GetUserId(c echo.Context) (uint, error) {
 	if !ok || token == nil {
 		return 0, errors.New("user token is not of type *jwt.Token")
 	}
-	
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {

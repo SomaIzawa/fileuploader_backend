@@ -21,21 +21,21 @@ type IAwsS3Manager interface {
 	UploadFile(objectKey string, file multipart.FileHeader) error
 }
 
-// TODO: 構造体の名前は要検討 
+// TODO: 構造体の名前は要検討
 type awsS3Manager struct {
-	session *session.Session
+	session    *session.Session
 	bucketName string
-	client *s3.S3
-} 
+	client     *s3.S3
+}
 
 func NewAwsS3Manager() IAwsS3Manager {
 	session := NewS3Session()
 	bucketName := os.Getenv("AWS_BUCKET_NAME")
 	client := s3.New(session)
 	return &awsS3Manager{
-		session: session,
+		session:    session,
 		bucketName: bucketName,
-		client: client,
+		client:     client,
 	}
 }
 
@@ -106,7 +106,6 @@ func (am *awsS3Manager) DeleteFile(key string) error {
 	}
 	return nil
 }
-
 
 func GenerateSignedURL(resourcePath string) (string, error) {
 	// CloudFrontの設定

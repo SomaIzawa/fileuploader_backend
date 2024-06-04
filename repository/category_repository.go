@@ -28,7 +28,7 @@ func (cr *categoryRepository) GetCategories(categories *[]model.Category) error 
 }
 
 func (cr *categoryRepository) GetCategory(category *model.Category, id uint) error {
-	if err := cr.db.Where("id=?",id).First(&category).Error; err != nil {
+	if err := cr.db.Where("id=?", id).First(&category).Error; err != nil {
 		return err
 	}
 	return nil
@@ -40,4 +40,3 @@ func (cr *categoryRepository) CreateCategory(category *model.Category) (id uint,
 	}
 	return category.ID, nil
 }
-

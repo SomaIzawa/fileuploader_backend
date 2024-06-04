@@ -50,4 +50,3 @@ func (cc *categoryController) Create(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, schema.CategoryModelToCategoryRes(category))
 }
-

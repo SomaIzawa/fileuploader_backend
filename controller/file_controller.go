@@ -48,7 +48,7 @@ func (fc *fileController) Download(c echo.Context) error {
 	filename := fmt.Sprintf("%s.%s", file.FileName, file.Type)
 	return c.JSON(http.StatusOK, schema.FileDownloadRes{
 		DownloadLink: presignedURL,
-		FileName: filename,
+		FileName:     filename,
 	})
 }
 
