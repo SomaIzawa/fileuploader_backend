@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"file-uploader-api/awsmanager"
 	"file-uploader-api/controller"
 	"file-uploader-api/db"
@@ -12,9 +13,36 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
 )
+
+var (
+	meter = otel.Meter("fileuploader-api-meter")
+	requestCnt metric.Int64Counter
+)
+
+func init() {
+	var err error
+	requestCnt, err = meter.Int64Counter(
+		"request",
+		metric.WithDescription("Counts of Request for API"),
+		metric.WithUnit("count"))
+	if err != nil {
+		panic(err)
+	}
+}
+
+func wrapHandler(ctx context.Context, handlerFunc echo.HandlerFunc, path string) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		rollValueAttr := attribute.Int("roll.value", 12)
+		requestCnt.Add(ctx, 1, metric.WithAttributes(rollValueAttr))
+		return handlerFunc(c)
+	}
+}
 
 func NewRouter() *echo.Echo {
 	db := db.NewDB()
@@ -73,7 +101,7 @@ func NewRouter() *echo.Echo {
 		SigningKey:  []byte(os.Getenv("SECRET")),
 		TokenLookup: "cookie:token",
 	}))
-	p.POST("", pc.Create)
+	p.POST("", wrapHandler(context.Background() ,pc.Create, "/posts"))
 	p.GET("", pc.List)
 	p.GET("/:postId", pc.GetById)
 
