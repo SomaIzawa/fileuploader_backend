@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"file-uploader-api/awsmanager"
 	"file-uploader-api/model"
 	"file-uploader-api/repository"
@@ -15,7 +16,7 @@ import (
 type IPostUsecase interface {
 	List() ([]model.Post, error)
 	Get(id string) (model.Post, error)
-	Create(req schema.CreatePostReq, userId uint) (model.Post, error)
+	Create(ctx context.Context, req schema.CreatePostReq, userId uint) (model.Post, error)
 }
 
 type postUsecase struct {
@@ -67,7 +68,7 @@ func (pu *postUsecase) Get(id string) (model.Post, error) {
 	return post, nil
 }
 
-func (pu *postUsecase) Create(req schema.CreatePostReq, userId uint) (model.Post, error) {
+func (pu *postUsecase) Create(ctx context.Context, req schema.CreatePostReq, userId uint) (model.Post, error) {
 	//バリデーション
 
 	// バリデーターを用いたバリデーション
@@ -124,7 +125,7 @@ func (pu *postUsecase) Create(req schema.CreatePostReq, userId uint) (model.Post
 	tx := pu.db.Begin()
 
 	// 投稿情報をDBに保存
-	if err := pu.pr.Create(&newPost); err != nil {
+	if err := pu.pr.Create(ctx, &newPost); err != nil {
 		return model.Post{}, nil
 	}
 

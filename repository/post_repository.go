@@ -1,15 +1,23 @@
 package repository
 
 import (
+	"context"
 	"file-uploader-api/model"
 
+	"go.opentelemetry.io/otel"
 	"gorm.io/gorm"
+)
+
+const name = "postRepository"
+
+var (
+	tracer = otel.Tracer(name)
 )
 
 type IPostRepository interface {
 	GetPosts(posts *[]model.Post) error
 	GetPost(post *model.Post, id uint) error
-	Create(post *model.Post) error
+	Create(ctx context.Context, post *model.Post) error
 }
 
 type postRepository struct {
@@ -34,7 +42,11 @@ func (pr *postRepository) GetPost(post *model.Post, id uint) error {
 	return nil
 }
 
-func (pr *postRepository) Create(post *model.Post) error {
+func (pr *postRepository) Create(ctx context.Context, post *model.Post) error {
+	// トレース
+	ctx, span := tracer.Start(ctx, "create")
+	defer span.End()
+	
 	if err := pr.db.Create(&post).Error; err != nil {
 		return err
 	}

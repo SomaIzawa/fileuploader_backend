@@ -3,9 +3,17 @@ package controller
 import (
 	"file-uploader-api/schema"
 	"file-uploader-api/usecase"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"go.opentelemetry.io/otel"
+)
+
+const name = "postController"
+
+var (
+	tracer = otel.Tracer(name)
 )
 
 type IPostController interface {
@@ -42,6 +50,12 @@ func (pc *postController) GetById(c echo.Context) error {
 }
 
 func (pc *postController) Create(c echo.Context) error {
+	// トレース
+	ctx, span := tracer.Start(c.Request().Context(), "create")
+	defer span.End()
+
+	fmt.Println(span.SpanContext().TraceID())
+
 	// リクエスト解析
 	var createPostReq schema.CreatePostReq
 
@@ -82,7 +96,7 @@ func (pc *postController) Create(c echo.Context) error {
 	}
 
 	// ユースケース実行
-	createdPost, err := pc.pu.Create(createPostReq, userId)
+	createdPost, err := pc.pu.Create(ctx, createPostReq, userId)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
